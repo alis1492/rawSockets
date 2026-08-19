@@ -35,7 +35,7 @@ int main() {
     string data = "hot fish hot fish";
 
     auto iphdr = IpHeaderBuilder()
-        .SetLength(data.length())
+        .SetLength(data)
         .SetSource("127.0.0.1")
         .SetDestination("127.0.0.1")
         .Build();

@@ -15,6 +15,11 @@ public:
     /// @return IpHeaderBuilder this
     IpHeaderBuilder& SetLength(uint16_t dataSize);
 
+    /// @brief set Ip Header length attribute based on a string provided
+    /// @param str string data thats about to be sent
+    /// @return IpHeaderBuilder this
+    IpHeaderBuilder& SetLength(string str);
+
     /// @brief set Ip Header source
     /// @param ip 127.0.0.1 string format
     /// @return IpHeaderBuilder this

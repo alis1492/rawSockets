@@ -15,6 +15,11 @@ IpHeaderBuilder& IpHeaderBuilder::SetLength(uint16_t dataSize) {
     return *this;
 }
 
+IpHeaderBuilder& IpHeaderBuilder::SetLength(string str) {
+    iphdr->setLengthByData(str.length());
+    return *this;
+}
+
 IpHeaderBuilder& IpHeaderBuilder::SetSource(string ip) {
     // extract uint8_t values from ip string
     uint8_t ip1 = stoul(ip.substr(0, ip.find_first_of(".")));
