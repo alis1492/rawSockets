@@ -1,3 +1,4 @@
+#pragma once
 #include "../types/ipHeader.hpp"
 #include <string>
 #include <memory>
