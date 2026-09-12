@@ -4,19 +4,44 @@
 #include <string>
 #include <cstdint>
 #include "ipHeader.hpp"
+#include <memory>
 
 using namespace std;
 
 class UdpHeader {
     vector<uint8_t> bytes;
     vector<uint8_t> pseudo;
+    vector<uint8_t> data;
 public:
-    UdpHeader()
+    // Constructors
+    template<typename T>
+    UdpHeader(const T& _data, size_t _dataLen)
         : bytes(8, 0)
-        , pseudo(12, 0) 
+        , pseudo(12, 0)
+    {
+        setData(_data, _dataLen);
+
+        pseudo[8] = 0;
+
+        setPseudoProtocol(Protocol::udp);
+    }
+    UdpHeader() 
+        : bytes(8, 0)
+        , pseudo(12, 0)
     {
         pseudo[8] = 0;
+
+        setPseudoProtocol(Protocol::udp);
     }
+
+    // Set data, takes whatever the hell user sends and converts it to bytes
+    template<typename T>
+    void setData(const T& _data, size_t _dataLen) {
+        uint8_t* ptr = reinterpret_cast<uint8_t*>(_data);
+        data.assign(ptr, ptr + _dataLen);
+    }
+
+    vector<uint8_t> getData() const { return data; }
 
     // pseudoHeader territory
     void setPseudoSource(uint8_t ip1, uint8_t ip2, uint8_t ip3, uint8_t ip4) {
@@ -57,8 +82,8 @@ public:
 
     void setPseudoLength() {
         uint16_t length = getLength();
-        bytes[10] = (length >> 8) & 0xFF;
-        bytes[11] = length & 0xFF;
+        pseudo[10] = (length >> 8) & 0xFF;
+        pseudo[11] = length & 0xFF;
     }
 
 
@@ -100,26 +125,67 @@ public:
         bytes[7] = 0;
     }
 
-    void setChecksum() {
+    uint16_t calculateChecksum() {
         setChecksumToZero();
-        
+        uint32_t sum = 0;
+
+        // add udp header
+        for(int i = 0; i < bytes.size(); i += 2) {
+            sum += (static_cast<uint16_t>(bytes[i]) << 8) | bytes[i+1];
+            if(sum & 0xFFFF0000) 
+                sum = (sum & 0xFFFF) + (sum >> 16);
+        }
+        // add pseudoHeader
+        for(int i = 0; i < pseudo.size(); i += 2) {
+            sum += (static_cast<uint16_t>(pseudo[i]) << 8) | pseudo[i+1];
+            if(sum & 0xFFFF0000) 
+                sum = (sum & 0xFFFF) + (sum >> 16);
+        }
+        // add data
+        for(int i = 0; i < data.size(); i += 2) {
+            if(i+1 < data.size())
+                sum += (static_cast<uint16_t>(data[i]) << 8) | data[i+1];
+            else
+                sum += (static_cast<uint16_t>(data[i]) << 8);
+            if(sum & 0xFFFF0000) 
+                sum = (sum & 0xFFFF) + (sum >> 16);
+        }
+
+        return static_cast<uint16_t>(~sum);
+    }
+
+    void setChecksum() {
+        uint16_t sum = calculateChecksum();
+        bytes[6] = (sum >> 8) & 0xFF;
+        bytes[7] = sum & 0xFF;
     }
 
     uint16_t getChecksum() const {
-
+        return (static_cast<uint16_t>(bytes[6]) << 8) | bytes[7];
     };
 
     vector<uint8_t> getBytes() const {
         return bytes;
     }
+
+    vector<uint8_t> getPacket() const {
+        vector<uint8_t> _bytes = bytes;
+        _bytes.insert(_bytes.end(), data.begin(), data.end());
+        return _bytes;
+    }
 };
 
-int main() {
-    UdpHeader udphdr;
-    udphdr.setSourcePort(1234);
-    udphdr.setDestinationPort(6666);
-    auto bytes = udphdr.getBytes();
-    for(const auto byte : bytes) {
-        printf("%2X ", byte);
-    }
-}
+// int main() {
+//     string data = "hot fish hot fish";
+//     UdpHeader udphdr(data.data(), data.size());
+//     udphdr.setSourcePort(1234);
+//     udphdr.setDestinationPort(6666);
+//     udphdr.setPseudoSource(127, 0, 0, 1);
+//     udphdr.setPseudoDestination(127, 0, 0, 1);
+//     udphdr.setLengthByData(data.size());
+//     udphdr.setChecksum();
+//     auto bytes = udphdr.getBytes();
+//     for(const auto byte : bytes) {
+//         printf("%2X ", byte);
+//     }
+// }
