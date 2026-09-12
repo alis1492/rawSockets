@@ -10,7 +10,7 @@
 #include <memory>
 #include "headers/types/ipHeader.hpp"
 #include "headers/builders/ipHeaderBuilder.hpp"
-#include "headers/types/udpHeader.cpp"
+#include "headers/types/udpHeader.hpp"
 
 using namespace std;
 

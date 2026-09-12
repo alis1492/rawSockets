@@ -1,7 +1,7 @@
 { pkgs ? import <nixpkgs> {} }:
 pkgs.mkShell {
   packages = with pkgs; [
-    gcc
+    gcc16
     cmake
     fmt
     pkg-config
