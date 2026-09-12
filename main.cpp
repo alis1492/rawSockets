@@ -11,6 +11,7 @@
 #include "headers/types/ipHeader.hpp"
 #include "headers/builders/ipHeaderBuilder.hpp"
 #include "headers/types/udpHeader.hpp"
+#include "headers/builders/udpHeaderBuilder.hpp"
 
 using namespace std;
 
@@ -47,14 +48,12 @@ int main() {
         .Build();
     auto iphdrBytes = iphdr->getBytes();
 
-    UdpHeader udphdr(data.data(), data.size());
-    udphdr.setSourcePort(1234);
-    udphdr.setDestinationPort(6666);
-    udphdr.setPseudoSource(127, 0, 0, 1);
-    udphdr.setPseudoDestination(127, 0, 0, 1);
-    udphdr.setLengthByData(data.size());
-    // udphdr.setChecksum();
-    auto packet = udphdr.getPacket();
+    auto udphdr = UdpHeaderBuilder()
+        .SetData(data.data(), data.size())
+        .SetSource("127.0.0.1", 1234)
+        .SetDestination("127.0.0.1", 6666)
+        .Build();
+    auto packet = udphdr->getPacket();
     
     vector<uint8_t> bytes(iphdrBytes.begin(), iphdrBytes.end());
     bytes.insert(bytes.end(), packet.begin(), packet.end());
