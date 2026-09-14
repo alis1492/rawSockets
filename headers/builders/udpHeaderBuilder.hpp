@@ -1,3 +1,4 @@
+#pragma once
 #include "../types/udpHeader.hpp"
 #include <memory>
 

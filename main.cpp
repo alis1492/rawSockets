@@ -8,10 +8,7 @@
 #include <iostream>
 #include <vector>
 #include <memory>
-#include "headers/types/ipHeader.hpp"
-#include "headers/builders/ipHeaderBuilder.hpp"
-#include "headers/types/udpHeader.hpp"
-#include "headers/builders/udpHeaderBuilder.hpp"
+#include "headers/builders/udpPacketBuilder.hpp"
 
 using namespace std;
 
@@ -41,22 +38,12 @@ int main() {
 
     string data = "hot fish hot fish\n";
 
-    auto iphdr = IpHeaderBuilder()
-        .SetLength(data)
-        .SetSource("127.0.0.1")
-        .SetDestination("127.0.0.1")
-        .Build();
-    auto iphdrBytes = iphdr->getBytes();
-
-    auto udphdr = UdpHeaderBuilder()
-        .SetData(data.data(), data.size())
+    auto bytes = UdpPacketBuilder()
         .SetSource("127.0.0.1", 1234)
         .SetDestination("127.0.0.1", 6666)
-        .Build();
-    auto packet = udphdr->getPacket();
-    
-    vector<uint8_t> bytes(iphdrBytes.begin(), iphdrBytes.end());
-    bytes.insert(bytes.end(), packet.begin(), packet.end());
+        .SetData(data.data(), data.size())
+        .Build()->getBytes();
+
 
     size_t bytesSent = sendto(sock, bytes.data(), bytes.size(), 0, (sockaddr*)&netcatAddress, netcatAddressSize);
     cout << bytesSent << endl;
